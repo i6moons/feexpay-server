@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+.env
+.env.*
+!.env.example
+.next/
+next-env.d.ts
+*.tsbuildinfo

@@ -1,0 +1,79 @@
+{
+  "name": "feexpay-server",
+  "version": "0.1.0",
+  "description": "SDK FeexPay serveur, typé et sans dépendance : Mobile Money (MTN, Moov, Wave, Orange…), carte bancaire, webhook vérifié et simulateur de la sandbox. Node, Next.js, Edge, Bun, Deno.",
+  "keywords": [
+    "feexpay",
+    "mobile-money",
+    "momo",
+    "payments",
+    "paiement",
+    "mtn",
+    "moov",
+    "wave",
+    "orange-money",
+    "benin",
+    "cote-divoire",
+    "senegal",
+    "togo",
+    "burkina-faso",
+    "xof",
+    "nextjs",
+    "webhook",
+    "typescript"
+  ],
+  "author": "Del Prudence (https://github.com/i6moons)",
+  "license": "MIT",
+  "homepage": "https://github.com/i6moons/feexpay-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/i6moons/feexpay-server.git"
+  },
+  "bugs": "https://github.com/i6moons/feexpay-server/issues",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./testing": {
+      "import": {
+        "types": "./dist/testing.d.ts",
+        "default": "./dist/testing.js"
+      },
+      "require": {
+        "types": "./dist/testing.d.cts",
+        "default": "./dist/testing.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
