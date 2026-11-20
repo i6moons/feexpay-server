@@ -1,19 +1,19 @@
-# Sécurité
+# Security
 
-## Signaler une faille dans feexpay-server
+## Reporting a vulnerability in feexpay-server
 
-N'ouvrez pas d'issue publique. Utilisez le signalement privé de GitHub : onglet **Security** du dépôt, puis **Report a vulnerability**.
+Do not open a public issue. Use GitHub's private reporting: the repository's **Security** tab, then **Report a vulnerability**.
 
-Décrivez la version concernée, le scénario et son impact. Vous recevrez une réponse sous 7 jours. Les correctifs de sécurité sont publiés en priorité, avec une mention dans le [CHANGELOG](CHANGELOG.md), et votre nom si vous le souhaitez.
+Describe the affected version, the scenario and its impact. You will get an answer within 7 days. Security fixes are released first, with an entry in the [CHANGELOG](CHANGELOG.md), and your name if you wish.
 
-## Faille dans FeexPay lui-même
+## Vulnerability in FeexPay itself
 
-Si le problème concerne la plateforme FeexPay (API, tableau de bord, SDK officiels) et non ce paquet, écrivez à FeexPay : support@feexpay.com (adresse donnée dans leur [documentation](https://docs.feexpay.me/?section=security&version=v2)).
+If the problem concerns the FeexPay platform (API, dashboard, official SDKs) and not this package, write to FeexPay: support@feexpay.com (the address given in their [documentation](https://docs.feexpay.me/?section=security&version=v2)).
 
-## Ce que le paquet garantit
+## What the package guarantees
 
-- La clé d'API n'est jamais écrite dans un message d'erreur ni renvoyée dans un objet.
-- `createFeexPay` refuse de démarrer dans un navigateur, sauf option `dangerouslyAllowBrowser`.
-- Le webhook compare le secret en temps constant et ne croit jamais son contenu : chaque transaction est relue auprès de l'API de statut.
-- `paymentUrl` (carte) n'accepte que les hôtes FeexPay documentés ; les autres URL renvoyées doivent être en https.
-- Aucune dépendance d'exécution : rien d'autre que votre code et ce paquet ne touche à la clé.
+- The API key is never written into an error message or returned in an object.
+- `createFeexPay` refuses to start in a browser, unless the `dangerouslyAllowBrowser` option is set.
+- The webhook compares the secret in constant time and never trusts its body: every transaction is re-read from the status API.
+- `paymentUrl` (cards) only accepts the documented FeexPay hosts; the other returned URLs must use https.
+- No runtime dependencies: nothing but your code and this package touches the key.

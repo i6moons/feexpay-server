@@ -1,8 +1,8 @@
-# Contribuer
+# Contributing
 
-Merci de votre aide ! Issues et pull requests en français ou en anglais.
+Thanks for your help! Issues and pull requests are welcome in English or French.
 
-## Démarrer
+## Getting started
 
 ```sh
 git clone https://github.com/i6moons/feexpay-server.git
@@ -11,20 +11,20 @@ npm install
 npm test
 ```
 
-Avant d'ouvrir une pull request : `npm run typecheck`, `npm test` et `npm run build` doivent passer.
+Before opening a pull request, `npm run typecheck`, `npm test` and `npm run build` must pass.
 
-## Les règles du projet
+## Project rules
 
-1. **Chaque comportement s'appuie sur une source.** Citez la section de la [documentation FeexPay](https://docs.feexpay.me) dans un commentaire. Si c'est un comportement observé et non documenté, dites-le (« observé en production le … »).
-2. **Zéro dépendance d'exécution.** `fetch` et les API Web standard suffisent : le paquet doit tourner sur Node, Edge, Bun et Deno.
-3. **Un test par comportement**, avec le simulateur (`src/testing.ts`). S'il ne sait pas reproduire un cas, enrichissez-le en suivant la section « Sandbox » de la documentation.
-4. **La clé ne sort jamais** : pas dans un message, pas dans un objet renvoyé, pas dans un journal.
+1. **Every behavior is backed by a source.** Cite the section of the [FeexPay documentation](https://docs.feexpay.me) in a comment. If the behavior was observed and is not documented, say so ("observed in production on …").
+2. **Zero runtime dependencies.** `fetch` and standard Web APIs are enough: the package must run on Node, Edge, Bun and Deno.
+3. **One test per behavior**, using the simulator (`src/testing.ts`). If it cannot reproduce a case, extend it by following the "Sandbox" section of the documentation.
+4. **The key never leaks**: not in a message, not in a returned object, not in a log.
 
-## Un réseau se comporte autrement chez vous ?
+## Does a network behave differently for you?
 
-Ouvrez une issue avec :
-- le réseau (`network`) ;
-- l'environnement (sandbox ou live) ;
-- la requête et la réponse, **sans la clé et avec le numéro masqué** (`maskPhoneNumber`).
+Open an issue with:
+- the network (`network`);
+- the environment (sandbox or live);
+- the request and the response, **without the key and with the number masked** (`maskPhoneNumber`).
 
-Ces retours sont précieux : la documentation ne couvre pas tout.
+This feedback is valuable: the documentation does not cover everything.

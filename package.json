@@ -1,7 +1,7 @@
 {
   "name": "feexpay-server",
   "version": "0.1.0",
-  "description": "SDK FeexPay serveur, typé et sans dépendance : Mobile Money (MTN, Moov, Wave, Orange…), carte bancaire, webhook vérifié et simulateur de la sandbox. Node, Next.js, Edge, Bun, Deno.",
+  "description": "Server-side FeexPay SDK, typed and dependency-free: Mobile Money (MTN, Moov, Wave, Orange…), cards, verified webhooks, sandbox simulator. Node, Next.js, Edge, Bun, Deno.",
   "keywords": [
     "feexpay",
     "mobile-money",

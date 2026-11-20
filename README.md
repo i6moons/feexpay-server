@@ -1,29 +1,29 @@
 # feexpay-server
 
-**Encaissez par Mobile Money et carte bancaire avec [FeexPay](https://feexpay.me), côté serveur, sans jamais exposer votre clé.**
+**Accept Mobile Money and card payments with [FeexPay](https://feexpay.me), on the server, without ever exposing your key.**
 
 [![CI](https://github.com/i6moons/feexpay-server/actions/workflows/ci.yml/badge.svg)](https://github.com/i6moons/feexpay-server/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/feexpay-server?color=cb3837)](https://www.npmjs.com/package/feexpay-server)
-![Zéro dépendance](https://img.shields.io/badge/d%C3%A9pendances-0-brightgreen)
-![TypeScript](https://img.shields.io/badge/TypeScript-typ%C3%A9-3178c6)
-[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-typed-3178c6)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-MTN, Moov, Celtiis, Coris, Wave, Orange, Free, T-Money et Flooz, au Bénin, au Togo, en Côte d'Ivoire, au Congo, au Sénégal et au Burkina Faso. Pour Node.js, Next.js, Bun, Deno, Cloudflare Workers et Vercel Edge.
+MTN, Moov, Celtiis, Coris, Wave, Orange, Free, T-Money and Flooz, in Benin, Togo, Côte d'Ivoire, Congo, Senegal and Burkina Faso. For Node.js, Next.js, Bun, Deno, Cloudflare Workers and Vercel Edge.
 
-> Projet communautaire, non affilié à FeexPay. Il suit la [documentation officielle](https://docs.feexpay.me) (API v2).
+> Community project, not affiliated with FeexPay. It follows the [official documentation](https://docs.feexpay.me) (API v2). Issues and pull requests are welcome in English or French.
 
-## Pourquoi
+## Why
 
-- **Votre clé reste sur le serveur.** Les SDK JavaScript et React de FeexPay prennent la clé `fp_…` en paramètre dans le navigateur. La documentation FeexPay l'assume : *« The only frontend where they must be exposed is our SDK »*. Or cette même clé autorise l'API REST de votre boutique. Ici, elle ne quitte jamais votre serveur, et le client refuse de démarrer dans un navigateur.
-- **Zéro dépendance.** Seulement `fetch` et les API Web standard. À titre de comparaison, le SDK Node officiel dépend d'Express, Winston, Nodemailer et Axios.
-- **Les pièges déjà gérés :**
-  - le statut est normalisé (« IN PENDING STATE » veut dire `PENDING`) ;
-  - en production, MTN répond toujours `PENDING` d'abord ;
-  - le webhook n'est pas signé, donc il est revérifié auprès de l'API ;
-  - une coupure pendant la demande est signalée (la demande est peut-être déjà sur le téléphone) ;
-  - une clé de sandbox utilisée en production est refusée au démarrage ;
-  - les numéros béninois à 10 chiffres (01…) sont validés.
-- **Testable sans réseau.** Un simulateur reproduit les règles de la sandbox FeexPay pour vos tests automatisés.
+- **Your key stays on the server.** FeexPay's JavaScript and React SDKs take the `fp_…` key as a parameter in the browser. The FeexPay documentation says so: *"The only frontend where they must be exposed is our SDK"*. Yet that same key authorizes your shop's REST API. Here it never leaves your server, and the client refuses to start in a browser.
+- **Zero dependencies.** Only `fetch` and standard Web APIs. For comparison, the official Node SDK depends on Express, Winston, Nodemailer and Axios.
+- **The pitfalls are already handled:**
+  - the status is normalized ("IN PENDING STATE" means `PENDING`);
+  - in production, MTN always answers `PENDING` first;
+  - the webhook is not signed, so it is re-checked against the API;
+  - a connection drop during the request is reported (the request may already be on the customer's phone);
+  - a sandbox key used in production is rejected at startup;
+  - 10-digit Beninese numbers (01…) are validated.
+- **Testable offline.** A simulator reproduces the FeexPay sandbox rules for your automated tests.
 
 ## Installation
 
@@ -31,120 +31,120 @@ MTN, Moov, Celtiis, Coris, Wave, Orange, Free, T-Money et Flooz, au Bénin, au T
 npm install feexpay-server
 ```
 
-Node.js 20 ou plus récent (ou tout environnement qui fournit `fetch`).
+Node.js 20 or later (or any runtime that provides `fetch`).
 
-## Démarrage rapide
+## Quick start
 
 ```ts
 import { createFeexPay } from 'feexpay-server'
 
 const feexpay = createFeexPay({
-  environment: 'sandbox', // 'live' en production
-  apiKey: process.env.FEEXPAY_API_KEY!, // test_key_… ou fp_…
+  environment: 'sandbox', // 'live' in production
+  apiKey: process.env.FEEXPAY_API_KEY!, // test_key_… or fp_…
   shopId: process.env.FEEXPAY_SHOP_ID!,
 })
 
-// 1. Le client reçoit la demande sur son téléphone
+// 1. The customer receives the request on their phone
 const payment = await feexpay.requestPayment({
   network: 'mtn',
-  phoneNumber: '01 97 00 00 00', // saisie locale ou +229…
-  amount: 2500, // calculé par VOTRE serveur, jamais reçu du navigateur
-  description: 'Abonnement Premium',
-  callbackInfo: 'order_42', // vous sera rendu tel quel
+  phoneNumber: '01 97 00 00 00', // local format or +229…
+  amount: 2500, // computed by YOUR server, never taken from the browser
+  description: 'Premium subscription',
+  callbackInfo: 'order_42', // returned to you as is
 })
 
-// 2. Il valide avec son code PIN ; le statut final arrive ensuite
+// 2. They confirm with their PIN; the final status comes next
 const transaction = await feexpay.waitForFinalStatus(payment.reference)
 if (transaction?.status === 'SUCCESSFUL' && transaction.amount >= 2500) {
-  // livrer la commande
+  // deliver the order
 }
 ```
 
-En production, préférez le [webhook](#webhook) à l'attente active.
+In production, prefer the [webhook](#webhook) to polling.
 
-## Réseaux pris en charge
+## Supported networks
 
-| Pays | Réseau | `network` | Parcours | Sandbox |
+| Country | Network | `network` | Flow | Sandbox |
 | --- | --- | --- | --- | :---: |
-| Bénin | MTN MoMo | `mtn` | PIN sur le téléphone | ✅ |
-| Bénin | Moov Money | `moov` | PIN sur le téléphone | ✅ |
-| Bénin | Celtiis Cash | `celtiis_bj` | PIN sur le téléphone | ✅ |
-| Bénin | Coris Money | `coris` | code SMS en deux appels | — |
-| Togo | T-Money (Togocom) | `togocom_tg` | PIN sur le téléphone | ✅ |
-| Togo | Flooz (Moov) | `moov_tg` | PIN sur le téléphone | ✅ |
-| Côte d'Ivoire | MTN MoMo | `mtn_ci` | PIN sur le téléphone | ✅ |
-| Côte d'Ivoire | Moov Money | `moov_ci` | page de l'opérateur | ✅ |
-| Côte d'Ivoire | Wave | `wave_ci` | page de l'opérateur | ✅ |
-| Côte d'Ivoire | Orange Money | `orange_ci` | page de l'opérateur | ✅ |
-| Congo | MTN MoMo (XAF) | `mtn_cg` | PIN sur le téléphone | ✅ |
-| Sénégal | Orange Money | `orange_sn` | page de l'opérateur | ✅ |
-| Sénégal | Wave | `wave_sn` | page de l'opérateur | ✅ |
-| Sénégal | Free Money | `free_sn` | PIN sur le téléphone | ✅ |
-| Burkina Faso | Moov Money | `moov_bf` | PIN sur le téléphone | — |
-| Burkina Faso | Orange Money | `orange_bf` | code USSD avant l'appel | — |
-| Burkina Faso | Wave | `wave_bf` | page de l'opérateur | — |
+| Benin | MTN MoMo | `mtn` | PIN on the phone | ✅ |
+| Benin | Moov Money | `moov` | PIN on the phone | ✅ |
+| Benin | Celtiis Cash | `celtiis_bj` | PIN on the phone | ✅ |
+| Benin | Coris Money | `coris` | SMS code, two calls | — |
+| Togo | T-Money (Togocom) | `togocom_tg` | PIN on the phone | ✅ |
+| Togo | Flooz (Moov) | `moov_tg` | PIN on the phone | ✅ |
+| Côte d'Ivoire | MTN MoMo | `mtn_ci` | PIN on the phone | ✅ |
+| Côte d'Ivoire | Moov Money | `moov_ci` | operator page | ✅ |
+| Côte d'Ivoire | Wave | `wave_ci` | operator page | ✅ |
+| Côte d'Ivoire | Orange Money | `orange_ci` | operator page | ✅ |
+| Congo | MTN MoMo (XAF) | `mtn_cg` | PIN on the phone | ✅ |
+| Senegal | Orange Money | `orange_sn` | operator page | ✅ |
+| Senegal | Wave | `wave_sn` | operator page | ✅ |
+| Senegal | Free Money | `free_sn` | PIN on the phone | ✅ |
+| Burkina Faso | Moov Money | `moov_bf` | PIN on the phone | — |
+| Burkina Faso | Orange Money | `orange_bf` | USSD code before the call | — |
+| Burkina Faso | Wave | `wave_bf` | operator page | — |
 
-- **Page de l'opérateur** : si `payment.paymentUrl` est renseigné, envoyez-y le client.
-- **Coris** : un premier appel sans `otp` déclenche l'envoi du code par SMS. Rappelez ensuite `requestPayment` avec les mêmes paramètres et `otp`.
-- **Orange Burkina Faso** : le client compose `#144*4*6*montant#`, puis vous transmet le code, à passer dans `otp`.
-- Les informations de chaque réseau sont exportées : `NETWORKS`, `networksOf('BJ')`, `normalizePhoneNumber('01 97 00 00 00', 'BJ')`.
+- **Operator page**: if `payment.paymentUrl` is set, send the customer there.
+- **Coris**: a first call without `otp` triggers the SMS code. Then call `requestPayment` again with the same parameters and `otp`.
+- **Orange Burkina Faso**: the customer dials `#144*4*6*amount#`, then gives you the code, which you pass as `otp`.
+- Each network's details are exported: `NETWORKS`, `networksOf('BJ')`, `normalizePhoneNumber('01 97 00 00 00', 'BJ')`.
 
-Montants : de 100 à 2 000 000 XOF en production, de 10 à 1 000 000 en sandbox. Ils sont vérifiés avant l'appel.
+Amounts: 100 to 2,000,000 XOF in production, 10 to 1,000,000 in the sandbox. They are checked before the call.
 
-## Suivre un paiement
+## Tracking a payment
 
-La réponse de `requestPayment` est le plus souvent `PENDING` : le client n'a pas encore validé. Le statut final (`SUCCESSFUL` ou `FAILED`) arrive ensuite, de trois façons :
+The response from `requestPayment` is usually `PENDING`: the customer has not confirmed yet. The final status (`SUCCESSFUL` or `FAILED`) comes later, in one of three ways:
 
-| Méthode | Pour |
+| Method | For |
 | --- | --- |
-| **Webhook** : `createWebhookHandler` | La production : FeexPay vous prévient. |
-| **`getTransaction(reference)`** | Le navigateur qui interroge votre API toutes les 3 s pendant que le client valide, et le filet si un webhook se perd. |
-| **`waitForFinalStatus(reference)`** | Les scripts et les tests. |
+| **Webhook**: `createWebhookHandler` | Production: FeexPay notifies you. |
+| **`getTransaction(reference)`** | The browser polling your API every 3 s while the customer confirms, and the safety net if a webhook gets lost. |
+| **`waitForFinalStatus(reference)`** | Scripts and tests. |
 
-Avant de livrer, vérifiez toujours que `transaction.amount` couvre le prix de la commande et que `transaction.callbackInfo` lui correspond.
+Before delivering, always check that `transaction.amount` covers the order price and that `transaction.callbackInfo` matches the order.
 
 ## Webhook
 
-FeexPay n'envoie qu'un webhook par transaction, et il n'est **pas signé**. Le gestionnaire :
+FeexPay sends a single webhook per transaction, and it is **not signed**. The handler:
 
-1. vérifie l'en-tête `Authorization` (en temps constant) ;
-2. écarte les événements de l'autre environnement (un événement sandbox reçu en production, par exemple) ;
-3. **relit la transaction auprès de l'API de statut**, avec votre clé : le contenu du webhook n'est jamais cru tel quel ;
-4. appelle `onPayment` avec la transaction vérifiée.
+1. checks the `Authorization` header (in constant time);
+2. drops events from the other environment (a sandbox event received in production, for example);
+3. **re-reads the transaction from the status API**, with your key: the webhook body is never trusted as is;
+4. calls `onPayment` with the verified transaction.
 
 ```ts
 // app/api/webhooks/feexpay/route.ts (Next.js App Router)
 import { createWebhookHandler } from 'feexpay-server'
-import { getFeexPay } from '@/lib/feexpay' // renvoie votre client createFeexPay(…)
+import { getFeexPay } from '@/lib/feexpay' // returns your createFeexPay(…) client
 
 export const POST = createWebhookHandler({
-  feexpay: getFeexPay, // une fonction : lue au premier webhook, pas pendant `next build`
-  secret: () => process.env.FEEXPAY_WEBHOOK_SECRET, // saisi aussi dans le tableau de bord FeexPay
+  feexpay: getFeexPay, // a function: read on the first webhook, not during `next build`
+  secret: () => process.env.FEEXPAY_WEBHOOK_SECRET, // also entered in the FeexPay dashboard
   async onPayment({ transaction }) {
-    // Idempotent : la même référence peut arriver deux fois.
+    // Idempotent: the same reference can arrive twice.
     await markOrderPaid(transaction.callbackInfo, transaction.reference, transaction.amount)
   },
 })
 ```
 
-Dans le tableau de bord FeexPay, section **Webhooks** :
-- l'URL de cette route ;
-- les événements `transaction.successful` et `transaction.failed` ;
-- l'authentification `Bearer`, avec la même valeur que `FEEXPAY_WEBHOOK_SECRET` (générez-la avec `openssl rand -hex 32`).
+In the FeexPay dashboard, **Webhooks** section:
+- the URL of this route;
+- the `transaction.successful` and `transaction.failed` events;
+- `Bearer` authentication, with the same value as `FEEXPAY_WEBHOOK_SECRET` (generate it with `openssl rand -hex 32`).
 
-Les codes de réponse suivent les règles de livraison de FeexPay : un 4xx n'est jamais rejoué, un 5xx l'est une fois, 5 s plus tard.
+Response codes follow FeexPay's delivery rules: a 4xx is never retried, a 5xx is retried once, 5 s later.
 
-| Réponse | Cas |
+| Response | Case |
 | --- | --- |
-| `200` | Paiement traité, ou webhook écarté (autre environnement, décaissement, référence inconnue) |
-| `401` | Secret absent ou faux |
-| `400` | Corps illisible |
-| `503` | FeexPay injoignable pendant la vérification, ou transaction encore `PENDING` : FeexPay réessaiera |
-| `500` | `onPayment` a levé une erreur : FeexPay réessaiera |
+| `200` | Payment processed, or webhook dropped (other environment, payout, unknown reference) |
+| `401` | Missing or wrong secret |
+| `400` | Unreadable body |
+| `503` | FeexPay unreachable during verification, or transaction still `PENDING`: FeexPay will retry |
+| `500` | `onPayment` threw an error: FeexPay will retry |
 
-Le gestionnaire prend une `Request` et renvoie une `Response` (API Web standard). Il fonctionne aussi avec Hono, Bun, Deno et Cloudflare Workers.
+The handler takes a `Request` and returns a `Response` (standard Web API). It also works with Hono, Bun, Deno and Cloudflare Workers.
 
-## Paiement par carte
+## Card payments
 
 ```ts
 const card = await feexpay.createCardPayment({
@@ -152,36 +152,36 @@ const card = await feexpay.createCardPayment({
   customer: {
     firstName: 'Awa',
     lastName: 'Kone',
-    email: 'awa@exemple.com',
+    email: 'awa@example.com',
     phoneNumber: '+2290197123456',
     city: 'Cotonou',
     zip: '00229',
     country: 'BJ',
   },
   callbackInfo: 'order_42',
-  returnUrl: 'https://boutique.exemple/merci',
+  returnUrl: 'https://shop.example/thanks',
 })
-// Redirigez le client vers card.paymentUrl (page FeexPay, 3D Secure)
+// Redirect the customer to card.paymentUrl (FeexPay page, 3D Secure)
 ```
 
-`paymentUrl` est vérifiée : seule la page de paiement FeexPay est acceptée. Une réponse inattendue n'enverra jamais votre client ailleurs. En production, la carte doit d'abord être activée sur la boutique (dossier KYB). Avant ça, FeexPay répond `403` et l'erreur a le type `card_not_authorized`.
+`paymentUrl` is verified: only the FeexPay payment page is accepted, so an unexpected response will never send your customer elsewhere. In production, cards must first be enabled on the shop (KYB file). Until then, FeexPay answers `403` and the error has the kind `card_not_authorized`.
 
-## Erreurs
+## Errors
 
-Trois classes d'erreur :
+Three error classes:
 
-- `FeexPayConfigError` : configuration refusée au démarrage (environnement, clé, boutique).
-- `FeexPayValidationError` : paramètre refusé avant l'appel. `error.field` dit lequel. Rien n'a été envoyé.
-- `FeexPayError` : réponse ou absence de réponse de FeexPay. Elle porte `status`, `code`, `body` et un `kind` prêt à l'emploi :
+- `FeexPayConfigError`: configuration rejected at startup (environment, key, shop).
+- `FeexPayValidationError`: parameter rejected before the call. `error.field` says which one. Nothing was sent.
+- `FeexPayError`: a response, or no response, from FeexPay. It carries `status`, `code`, `body` and a ready-to-use `kind`:
 
-| `kind` | Que faire |
+| `kind` | What to do |
 | --- | --- |
-| `channel_not_configured`, `network_unavailable` | Proposer un autre opérateur |
-| `invalid_phone_number`, `invalid_sandbox_number` | Faire corriger le numéro (en sandbox : finir par 00 à 06) |
-| `unauthorized`, `forbidden`, `shop_not_found`, `card_not_authorized` | Problème de configuration : alerter l'équipe |
-| `timeout`, `network_error`, `server_error` | Voir `outcomeUnknown` ci-dessous |
+| `channel_not_configured`, `network_unavailable` | Offer another operator |
+| `invalid_phone_number`, `invalid_sandbox_number` | Ask for a corrected number (in the sandbox: ending in 00 to 06) |
+| `unauthorized`, `forbidden`, `shop_not_found`, `card_not_authorized` | Configuration problem: alert the team |
+| `timeout`, `network_error`, `server_error` | See `outcomeUnknown` below |
 
-**`outcomeUnknown`** : la demande a peut-être atteint FeexPay malgré l'erreur (délai dépassé, coupure, 5xx). Le client a peut-être déjà la demande sur son téléphone. Ne relancez pas un second paiement à l'aveugle : cherchez-le d'abord.
+**`outcomeUnknown`**: the request may have reached FeexPay despite the error (timeout, connection drop, 5xx). The customer may already have the request on their phone. Do not blindly start a second payment: look for the first one.
 
 ```ts
 try {
@@ -189,16 +189,16 @@ try {
 } catch (error) {
   if (error instanceof FeexPayError && error.outcomeUnknown) {
     const existing = await feexpay.findTransaction({ callbackInfo: attemptId })
-    // existing ? suivre cette transaction : demander au client de vérifier son téléphone
+    // existing ? track that transaction : ask the customer to check their phone
   }
 }
 ```
 
-Pour que cette recherche marche, `callbackInfo` doit être un identifiant d'**un seul mot**, propre à chaque tentative (par exemple `order_42:a1b2c3d4`).
+For this lookup to work, `callbackInfo` must be a **single-word** identifier, unique to each attempt (for example `order_42:a1b2c3d4`).
 
-## Tester avec le simulateur
+## Testing with the simulator
 
-`feexpay-server/testing` reproduit la [sandbox FeexPay](https://docs.feexpay.me/?section=sandbox&version=v2) sans réseau ni compte. Il se branche à la place de `fetch`, sans rien modifier globalement.
+`feexpay-server/testing` reproduces the [FeexPay sandbox](https://docs.feexpay.me/?section=sandbox&version=v2) with no network and no account. It plugs in place of `fetch`, without changing anything globally.
 
 ```ts
 import { createFeexPay } from 'feexpay-server'
@@ -208,55 +208,55 @@ const mock = createFeexPayMock()
 const feexpay = createFeexPay({ environment: 'sandbox', apiKey: mock.apiKey, shopId: mock.shopId, fetch: mock.fetch })
 
 const payment = await feexpay.requestPayment({ network: 'mtn', phoneNumber: testPhoneNumber('05'), amount: 1000 })
-// PENDING, puis SUCCESSFUL à la consultation suivante
+// PENDING, then SUCCESSFUL on the next lookup
 
-// Tester votre route de webhook avec le vrai format FeexPay
-const response = await POST(mock.webhookRequest(payment.reference, { secret: 'mon_secret' }))
+// Test your webhook route with the real FeexPay format
+const response = await POST(mock.webhookRequest(payment.reference, { secret: 'my_secret' }))
 ```
 
-| Le numéro finit par | Résultat |
+| The number ends in | Result |
 | --- | --- |
 | `00` | `SUCCESSFUL` |
-| `01` | `FAILED` (solde insuffisant) |
+| `01` | `FAILED` (insufficient balance) |
 | `02` | HTTP 503, transaction `FAILED` |
-| `03` | `PENDING` puis `FAILED` (délai dépassé) |
+| `03` | `PENDING` then `FAILED` (timed out) |
 | `04` | HTTP 400 `INVALID_PHONE_NUMBER` |
-| `05` | `PENDING` puis `SUCCESSFUL` |
-| `06` | `PENDING` puis `FAILED` (refusé par le client) |
+| `05` | `PENDING` then `SUCCESSFUL` |
+| `06` | `PENDING` then `FAILED` (declined by the customer) |
 
-Pour simuler les incidents :
-- `mock.offline = true` coupe le réseau ;
-- `mock.latencyMs` ajoute un délai, pour tester `timeoutMs` ;
-- `mock.loseNextResponse()` crée la transaction puis perd la réponse ;
-- `mock.failNextRequest(404, { message: 'moov channel not configured' })` renvoie une erreur ;
-- `mock.tamper(reference, { amount: 1 })` falsifie le statut, pour tester vos contrôles.
+To simulate incidents:
+- `mock.offline = true` cuts the network;
+- `mock.latencyMs` adds a delay, to test `timeoutMs`;
+- `mock.loseNextResponse()` creates the transaction, then loses the response;
+- `mock.failNextRequest(404, { message: 'moov channel not configured' })` returns an error;
+- `mock.tamper(reference, { amount: 1 })` tampers with the status, to test your checks.
 
-## Exemple complet
+## Full example
 
-[`examples/nextjs`](examples/nextjs) contient une boutique Next.js minimale :
-- la page de paiement ;
-- la route qui lance le paiement ;
-- le suivi depuis le navigateur ;
-- le webhook ;
-- une commande dont le prix est fixé par le serveur.
+[`examples/nextjs`](examples/nextjs) contains a minimal Next.js shop:
+- the checkout page;
+- the route that starts the payment;
+- tracking from the browser;
+- the webhook;
+- an order whose price is set by the server.
 
-## Bonnes pratiques
+## Good practices
 
-- **Le montant vient de votre base de données**, jamais du navigateur.
-- **Variables serveur uniquement** : jamais de `NEXT_PUBLIC_FEEXPAY_…`.
-- **Traitement idempotent** : une même référence peut arriver par le webhook, par le suivi et par un nouvel essai.
-- **Journaux sans données personnelles** : `maskPhoneNumber('2290197000005')` donne `+229 ••••••••05`.
-- **Activez le secret du webhook.** Sans lui, les paiements restent revérifiés, mais n'importe qui peut déclencher ces vérifications.
+- **The amount comes from your database**, never from the browser.
+- **Server-only variables**: never `NEXT_PUBLIC_FEEXPAY_…`.
+- **Idempotent processing**: the same reference can arrive through the webhook, through tracking and through a retry.
+- **Logs without personal data**: `maskPhoneNumber('2290197000005')` gives `+229 ••••••••05`.
+- **Enable the webhook secret.** Without it, payments are still re-checked, but anyone can trigger those checks.
 
-## Limites connues
+## Known limitations
 
-- **Pas encore pris en charge** : les décaissements (payout), le solde et l'historique des paiements.
-- **Ce paquet est testé contre le simulateur**, pas encore contre FeexPay en conditions réelles. Ses règles suivent la documentation officielle.
-- **Retours bienvenus** : si un réseau se comporte autrement chez vous, [ouvrez une issue](https://github.com/i6moons/feexpay-server/issues).
+- **Not supported yet**: payouts, balance and payment history.
+- **This package is tested against the simulator**, not yet against FeexPay in real conditions. Its rules follow the official documentation.
+- **Feedback welcome**: if a network behaves differently for you, [open an issue](https://github.com/i6moons/feexpay-server/issues).
 
-## Contribuer
+## Contributing
 
-Les contributions sont les bienvenues : voir [CONTRIBUTING.md](CONTRIBUTING.md). Pour signaler une faille, lisez [SECURITY.md](SECURITY.md).
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). To report a vulnerability, read [SECURITY.md](SECURITY.md).
 
 ```sh
 npm install
@@ -265,19 +265,6 @@ npm run typecheck
 npm run build
 ```
 
-## Licence
+## License
 
 [MIT](LICENSE) © Del Prudence ([@i6moons](https://github.com/i6moons)).
-
----
-
-### English
-
-`feexpay-server` is a typed, zero-dependency, server-only SDK for the [FeexPay](https://feexpay.me) payment API (West and Central Africa).
-
-- **Mobile Money**: 17 networks across Benin, Togo, Côte d'Ivoire, Congo, Senegal and Burkina Faso.
-- **Card payments**, with a strict check of the checkout URL.
-- **Webhook handler**: verifies the shared secret, then re-reads every notification from the status API, since webhooks are not signed.
-- **Sandbox simulator** for offline tests.
-
-It runs anywhere `fetch` exists: Node.js 20+, Next.js (including Edge), Bun, Deno and Cloudflare Workers. Unlike the official browser SDKs, your `fp_…` key never leaves the server. See the French sections above for the API; code samples are self-explanatory.
